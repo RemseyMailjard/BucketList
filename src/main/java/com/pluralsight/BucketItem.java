@@ -1,129 +1,125 @@
 package com.pluralsight;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Objects;
 
-public class BucketItem {
-    private int id;
-    private String title;
-    private String description;
-    private boolean isDone;
-    private LocalDate createdDate;
-    private LocalDate targetDate;
-    private LocalDate completedDate;
-    private String category;
-    private int priority;
-    private List<String> sharedWithEmails;
-    private String imageUrl;
-    private String notes;
+/**
+ * Immutable Bucket‑list item using Java 17 <code>record</code> semantics.
+ */
+public record BucketItem(
+        int id,                       // 0 = not yet persisted
+        String title,
+        String description,
+        Category category,
+        Priority priority,
+        LocalDate createdDate,
+        LocalDate targetDate,
+        LocalDate completedDate,
+        boolean done,
+        String notes,
+        String imageUrl
+) {
 
-    public BucketItem(int id, String title, String description, LocalDate targetDate,
-                      String category, int priority) {
-        this.id = id;
-        this.title = title;
-        this.description = description;
-        this.targetDate = targetDate;
-        this.category = category;
-        this.priority = priority;
-        this.isDone = false;
-        this.createdDate = LocalDate.now();
-        this.sharedWithEmails = new ArrayList<>();
+    /* ----------------------------- Validation ---------------------------------- */
+    public BucketItem {
+        title       = requireNonBlank(title, "title");
+        description = nullableTrim(description);
+        notes       = nullableTrim(notes);
+        imageUrl    = nullableTrim(imageUrl);
+
+        createdDate = createdDate == null ? LocalDate.now() : createdDate;
+        category    = category    == null ? Category.UNCATEGORISED : category;
+        priority    = priority    == null ? Priority.MEDIUM        : priority;
+
+        if (done && completedDate == null)
+            completedDate = LocalDate.now();
+        if (!done)
+            completedDate = null;           // keep model consistent
     }
 
-    public int getId() {
-        return id;
+    /* ----------------------------- Business helpers ---------------------------- */
+
+    /** Returns a copy with <code>done = true</code> and <code>completedDate = now</code>. */
+    public BucketItem markDone() {
+        return new BucketItem(id, title, description, category, priority,
+                createdDate, targetDate, LocalDate.now(),
+                true, notes, imageUrl);
     }
 
-    public String getTitle() {
-        return title;
+    /** Returns a copy with a newly assigned database id. */
+    public BucketItem withId(int newId) {
+        return new BucketItem(newId, title, description, category, priority,
+                createdDate, targetDate, completedDate,
+                done, notes, imageUrl);
     }
 
-    public boolean isDone() {
-        return isDone;
+    /** Returns a copy with an updated target date. */
+    public BucketItem withTargetDate(LocalDate newTarget) {
+        return new BucketItem(id, title, description, category, priority,
+                createdDate, newTarget, completedDate,
+                done, notes, imageUrl);
     }
 
-    public String getDescription() {
-        return description;
+    /* ----------------------------- CSV serialisation --------------------------- */
+
+    private static final String SEP = "|";
+
+    /** Serialises to a <code>|</code>-delimited line. */
+    public String toCsv() {
+        return String.join(SEP,
+                String.valueOf(id),
+                esc(title),
+                esc(description),
+                category.name(),
+                String.valueOf(priority.value),
+                Boolean.toString(done),
+                createdDate.toString(),
+                targetDate   != null ? targetDate.toString()   : "",
+                completedDate!= null ? completedDate.toString(): "",
+                esc(notes),
+                esc(imageUrl)
+        );
     }
 
-    public LocalDate getCreatedDate() {
-        return createdDate;
+    public static BucketItem fromCsv(String line) {
+        String[] p = line.split("\\|", -1);            // -1 keeps trailing empties
+        return new BucketItem(
+                Integer.parseInt(p[0]),
+                unesc(p[1]),
+                unesc(p[2]),
+                Category.valueOf(p[3]),
+                Priority.from(Integer.parseInt(p[4])),
+                LocalDate.parse(p[6]),
+                p[7].isBlank() ? null : LocalDate.parse(p[7]),
+                p[8].isBlank() ? null : LocalDate.parse(p[8]),
+                Boolean.parseBoolean(p[5]),
+                unesc(p[9]),
+                unesc(p[10])
+        );
     }
 
-    public LocalDate getTargetDate() {
-        return targetDate;
-    }
+    /* ----------------------------- Nested Enums -------------------------------- */
 
-    public LocalDate getCompletedDate() {
-        return completedDate;
-    }
+    public enum Category { TRAVEL, FITNESS, ADVENTURE, CAREER, PERSONAL, LEARNING, OTHER, UNCATEGORISED }
 
-    public String getCategory() {
-        return category;
-    }
-
-    public int getPriority() {
-        return priority;
-    }
-
-    public List<String> getSharedWithEmails() {
-        return sharedWithEmails;
-    }
-
-    public String getImageUrl() {
-        return imageUrl;
-    }
-
-    public String getNotes() {
-        return notes;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public void setDone(boolean done) {
-        this.isDone = done;
-        if (done) {
-            this.completedDate = LocalDate.now();
-        } else {
-            this.completedDate = null;
+    public enum Priority {
+        HIGH(1), MEDIUM(3), LOW(5);
+        public final int value;
+        Priority(int v){ this.value = v; }
+        public static Priority from(int v){
+            return v <= 2 ? HIGH : v >= 5 ? LOW : MEDIUM;
         }
     }
 
-    public void setTargetDate(LocalDate targetDate) {
-        this.targetDate = targetDate;
-    }
+    /* ----------------------------- Utility ------------------------------------- */
 
-    public void setCategory(String category) {
-        this.category = category;
+    private static String requireNonBlank(String s, String field){
+        Objects.requireNonNull(s, field+" must not be null");
+        s = s.strip();
+        if (s.isBlank()) throw new IllegalArgumentException(field+" must not be blank");
+        return s;
     }
-
-    public void setPriority(int priority) {
-        this.priority = priority;
-    }
-
-    public void setSharedWithEmails(List<String> sharedWithEmails) {
-        this.sharedWithEmails = sharedWithEmails;
-    }
-
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
-    }
-
-    public void setNotes(String notes) {
-        this.notes = notes;
-    }
-
-    @Override
-    public String toString() {
-        return (isDone ? "[X] " : "[ ] ") + title + " (" + category + ") - " + description +
-                " [Due: " + (targetDate != null ? targetDate : "N/A") + "]";
-    }
+    private static String nullableTrim(String s){ return s == null ? "" : s.strip(); }
+    private static String esc(String s){ return s.replace("|", "\\|"); }
+    private static String unesc(String s){ return s.replace("\\|", "|"); }
 }
-
