@@ -7,5 +7,8 @@ public interface BucketItemManager {
     void removeItem(String title);
     void updateItem(String title);
     void markAsDone(String title);
+
+    void markItemAsDone(String title);
+
     List<BucketItem> getAllItems();
 }
