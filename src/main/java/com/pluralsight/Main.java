@@ -106,7 +106,7 @@ public class Main {
         if (manager instanceof FileBucketManager fileManager) {
             fileManager.updateItem(oldTitle, newTitle);
         } else if (manager instanceof DatabaseManager dbManager) {
-            dbManager.updateItem(oldTitle, newTitle);1
+            dbManager.updateItem(oldTitle, newTitle);
         } else {
             System.out.println("⚠️ Update not supported in this manager.");
         }
