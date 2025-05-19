@@ -15,8 +15,18 @@ public class DatabaseManager implements BucketItemManager {
     }
 
     private Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(connectionString);
+        String url = "jdbc:sqlserver://skills4it.database.windows.net:1433;" +
+                "database=yearup;" +
+                "encrypt=true;" +
+                "trustServerCertificate=false;" +
+                "authentication=ActiveDirectoryDefault;" +
+                "hostNameInCertificate=*.database.windows.net;" +
+                "loginTimeout=30;";
+
+        return DriverManager.getConnection(url);
     }
+
+
 
     @Override
     public void addItem(BucketItem item) {
@@ -43,6 +53,10 @@ public class DatabaseManager implements BucketItemManager {
 
     @Override
     public void updateItem(String title) {
+
+    }
+
+    public void updateItem(String title, String _newTitle) {
         System.out.print("Enter new title: ");
         Scanner scanner = new Scanner(System.in);
         String newTitle = scanner.nextLine();
@@ -57,10 +71,7 @@ public class DatabaseManager implements BucketItemManager {
         }
     }
 
-    @Override
-    public void markAsDone(String title) {
 
-    }
 
     @Override
     public void markItemAsDone(String title) {

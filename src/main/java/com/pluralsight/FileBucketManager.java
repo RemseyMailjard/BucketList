@@ -58,7 +58,7 @@ public class FileBucketManager implements BucketItemManager {
 
 
     @Override
-    public void markAsDone(String title) {
+    public void markItemAsDone(String title) {
         List<BucketItem> items = getAllItems();
         for (BucketItem item : items) {
             if (item.getTitle().equalsIgnoreCase(title)) {
@@ -69,10 +69,6 @@ public class FileBucketManager implements BucketItemManager {
         writeAllItems(items);
     }
 
-    @Override
-    public void markItemAsDone(String title) {
-
-    }
 
     @Override
     public List<BucketItem> getAllItems() {
@@ -81,9 +77,14 @@ public class FileBucketManager implements BucketItemManager {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split("\\|");
-                if (parts.length == 2) {
-                    BucketItem item = new BucketItem(parts[0]);
-                    item.setDone(Boolean.parseBoolean(parts[1]));
+
+                if (parts.length >= 2) {
+                    String title = parts[0];
+                    boolean isDone = Boolean.parseBoolean(parts[1]);
+                    String description = parts.length >= 3 ? parts[2] : "";
+
+                    BucketItem item = new BucketItem(title, description);
+                    item.setDone(isDone);
                     items.add(item);
                 }
             }
@@ -92,6 +93,7 @@ public class FileBucketManager implements BucketItemManager {
         }
         return items;
     }
+
 
     private void writeAllItems(List<BucketItem> items) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
@@ -102,5 +104,8 @@ public class FileBucketManager implements BucketItemManager {
         } catch (IOException e) {
             System.err.println("Error writing updated list: " + e.getMessage());
         }
+    }
+
+    public void updateItem(String oldTitle, String newTitle) {
     }
 }
