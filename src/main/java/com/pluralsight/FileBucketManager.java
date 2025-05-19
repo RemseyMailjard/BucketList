@@ -107,5 +107,23 @@ public class FileBucketManager implements BucketItemManager {
     }
 
     public void updateItem(String oldTitle, String newTitle) {
+        List<BucketItem> items = getAllItems();
+        boolean updated = false;
+
+        for (BucketItem item : items) {
+            if (item.getTitle().equalsIgnoreCase(oldTitle)) {
+                item.setTitle(newTitle);
+                updated = true;
+                break;
+            }
+        }
+
+        if (updated) {
+            writeAllItems(items);
+            System.out.println("Item updated successfully.");
+        } else {
+            System.out.println("Item not found.");
+        }
+
     }
 }
