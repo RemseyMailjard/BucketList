@@ -18,14 +18,7 @@ public class Main {
         if (storageChoice.equals("1")) {
             manager = new FileBucketManager("bucketlist.txt");
         } else if (storageChoice.equals("2")) {
-            String connectionString = "jdbc:sqlserver://skills4it.database.windows.net:1433;" +
-                    "database=yearup;" +
-                    "encrypt=true;" +
-                    "trustServerCertificate=false;" +
-                    "authentication=ActiveDirectoryDefault;" +
-                    "hostNameInCertificate=*.database.windows.net;" +
-                    "loginTimeout=30;";
-            manager = new DatabaseManager(connectionString);
+            manager = new DatabaseManager(); // now uses hardcoded connection string for bucket_user
         } else {
             System.out.println("⚠️ Invalid choice. Exiting...");
             return;

@@ -1,32 +1,28 @@
 package com.pluralsight;
 
-import java.util.List;
-
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class DatabaseManager implements BucketItemManager {
 
     private final String connectionString;
 
-    public DatabaseManager(String connectionString) {
-        this.connectionString = connectionString;
+    public DatabaseManager() {
+        this.connectionString =
+                "jdbc:sqlserver://skills4it.database.windows.net:1433;" +
+                        "database=yearup;" +
+                        "user=bucket_user;" +
+                        "password=SuperSecurePassword123!;" +
+                        "encrypt=true;" +
+                        "trustServerCertificate=false;" +
+                        "loginTimeout=30;";
     }
 
     private Connection getConnection() throws SQLException {
-        String url = "jdbc:sqlserver://skills4it.database.windows.net:1433;" +
-                "database=yearup;" +
-                "encrypt=true;" +
-                "trustServerCertificate=false;" +
-                "authentication=ActiveDirectoryDefault;" +
-                "hostNameInCertificate=*.database.windows.net;" +
-                "loginTimeout=30;";
-
-        return DriverManager.getConnection(url);
+        return DriverManager.getConnection(connectionString);
     }
-
-
 
     @Override
     public void addItem(BucketItem item) {
@@ -53,25 +49,23 @@ public class DatabaseManager implements BucketItemManager {
 
     @Override
     public void updateItem(String title) {
-
-    }
-
-    public void updateItem(String title, String _newTitle) {
         System.out.print("Enter new title: ");
         Scanner scanner = new Scanner(System.in);
         String newTitle = scanner.nextLine();
 
+        updateItem(title, newTitle);
+    }
+
+    public void updateItem(String oldTitle, String newTitle) {
         String sql = "UPDATE BucketItems SET title = ? WHERE title = ?";
         try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, newTitle);
-            stmt.setString(2, title);
+            stmt.setString(2, oldTitle);
             stmt.executeUpdate();
         } catch (SQLException e) {
             System.err.println("Error updating item: " + e.getMessage());
         }
     }
-
-
 
     @Override
     public void markItemAsDone(String title) {
