@@ -70,6 +70,11 @@ public class FileBucketManager implements BucketItemManager {
     }
 
     @Override
+    public void markItemAsDone(String title) {
+
+    }
+
+    @Override
     public List<BucketItem> getAllItems() {
         List<BucketItem> items = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
